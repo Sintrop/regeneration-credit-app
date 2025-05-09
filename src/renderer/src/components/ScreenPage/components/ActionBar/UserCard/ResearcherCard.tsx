@@ -1,0 +1,37 @@
+import {
+  researcherAddress,
+  researcherAbi,
+  sequoiaResearcherAddress,
+  sequoiaResearcherAbi
+} from '@renderer/services/contracts'
+import { useAccount, useChainId, useReadContract } from 'wagmi'
+import { BasicData } from './BasicData'
+import { ResearcherProps } from '@renderer/types/researcher'
+import { ContentCardProps } from './UserCard'
+import { formatUnits } from 'viem'
+
+export function ResearcherCard({ changeIndicator }: ContentCardProps): JSX.Element {
+  const { address } = useAccount()
+  const chainId = useChainId()
+
+  const { data } = useReadContract({
+    address: chainId === 250225 ? researcherAddress : sequoiaResearcherAddress,
+    abi: chainId === 250225 ? researcherAbi : sequoiaResearcherAbi,
+    functionName: 'getResearcher',
+    args: [address]
+  })
+
+  const researcher = data as ResearcherProps
+
+  if (researcher) {
+    changeIndicator(parseInt(formatUnits(BigInt(researcher?.publishedResearches), 0)))
+  }
+
+  return (
+    <BasicData
+      address={address ? address : ''}
+      name={researcher ? researcher?.name : ''}
+      photoHash={researcher ? researcher?.proofPhoto : ''}
+    />
+  )
+}
